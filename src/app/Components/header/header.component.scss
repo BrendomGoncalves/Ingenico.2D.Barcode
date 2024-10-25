@@ -1,6 +1,7 @@
 .conteiner {
-  height: 60px;
-  padding: 10px 30px 10px 30px;
+  background-color: #0C1E58;
+  height: 100%;
+  padding: 10px 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,7 +10,7 @@
 }
 
 .logo {
-  width: 9rem;
+  width: 10rem;
 }
 
 .btn-logout {

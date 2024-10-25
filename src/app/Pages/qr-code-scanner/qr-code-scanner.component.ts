@@ -9,8 +9,7 @@ import {MessageModule} from 'primeng/message';
 import {BarcodeFormat} from '@zxing/library';
 import {DialogModule} from 'primeng/dialog';
 import {ButtonModule} from "primeng/button";
-import {StyleClassModule} from "primeng/styleclass";
-import { Produto } from '../../Models/product.model';
+import {Produto} from '../../Models/product.model';
 
 @Component({
   selector: 'app-qr-code-scanner',
@@ -24,7 +23,6 @@ import { Produto } from '../../Models/product.model';
     MessageModule,
     DialogModule,
     ButtonModule,
-    StyleClassModule
   ],
   templateUrl: './qr-code-scanner.component.html',
   styleUrls: ['./qr-code-scanner.component.scss'],
@@ -43,18 +41,49 @@ export class QrCodeScannerComponent implements OnInit {
   displayModal: boolean = false;
 
   overlay: boolean = true;
+  isMobile: boolean = false;
 
-  constructor(private messageService: MessageService) {}
+  constructor(private messageService: MessageService) {
+  }
 
   ngOnInit() {
     this.checkIfMobile();
+    if (!this.isMobile) {
+      if (typeof localStorage !== 'undefined') {
+        const permissionGranted = localStorage.getItem('cameraPermissionGranted');
+        if (permissionGranted === 'true') {
+          this.initializeCamera();
+        }
+      } else {
+        console.warn('Local storage não disponível');
+      }
+    }
+  }
+
+  // Teste para aumentar velocidade de abertura da camera
+  initializeCamera(): void {
+    if (typeof navigator !== 'undefined') {
+      navigator.mediaDevices.getUserMedia({video: true})
+        .then((stream) => {
+          this.onCamerasFound([stream.getVideoTracks()[0].getSettings() as MediaDeviceInfo]);
+          this.hasPermission = true;
+        })
+        .catch((err) => {
+          console.error('Erro ao inicializar a câmera:', err);
+          this.hasPermission = false;
+        });
+    } else {
+      console.warn('Navigator não disponível');
+    }
   }
 
   // Verificação inicial para ativação do overlay
   checkIfMobile() {
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      this.overlay = false;
+    if (typeof window !== 'undefined') {
+      this.isMobile = window.innerWidth <= 768;
+      if (this.isMobile) {
+        this.overlay = false;
+      }
     }
   }
 
@@ -96,6 +125,25 @@ export class QrCodeScannerComponent implements OnInit {
 
   onHasPermission(has: boolean): void {
     this.hasPermission = has;
+
+    if (!this.isMobile) {
+      if (typeof localStorage !== 'undefined' && typeof navigator !== 'undefined') {
+        if (has) {
+          localStorage.setItem('cameraPermissionGranted', 'true'); // Armazena a permissão
+          this.initializeCamera(); // Inicia a câmera se a permissão foi dada agora
+        } else {
+          navigator.mediaDevices.getUserMedia({video: true})
+            .then((stream) => {
+              this.hasPermission = true;
+              localStorage.setItem('cameraPermissionGranted', 'true'); // Armazena a permissão
+              this.onCamerasFound([stream.getVideoTracks()[0].getSettings() as MediaDeviceInfo]);
+            })
+            .catch((error) => console.error("Erro ao obter permissão da câmera:", error));
+        }
+      } else {
+        console.warn('Local storage ou Navigator não disponível');
+      }
+    }
   }
 
   onCodeResult(result: string) {
@@ -121,7 +169,7 @@ export class QrCodeScannerComponent implements OnInit {
 
   handleFormattedData(data: string): void {
     this.dadosProduto = this.converterParaProduto(data)
-    console.log("NOME DO PRODUTO" ,this.dadosProduto.nome);
+    console.log("NOME DO PRODUTO", this.dadosProduto.nome);
     this.displayModal = true;
   }
 
@@ -189,16 +237,9 @@ export class QrCodeScannerComponent implements OnInit {
   }
 
   clickOverlay() {
-    const div = document.getElementsByClassName('scanner-overlay')[0];
-    if (div) {
-      div.classList.add('slide-up');
-      setTimeout(() => {
-        this.overlay = false;
-      }, 1000); // Tempo da animação
-      setTimeout(() => {
-        this.overlay = true;
-        div.classList.remove('slide-up');
-      }, 20000);
-    }
+    this.overlay = false;
+    setTimeout(() => {
+      this.overlay = true;
+    }, 10000);
   }
 }

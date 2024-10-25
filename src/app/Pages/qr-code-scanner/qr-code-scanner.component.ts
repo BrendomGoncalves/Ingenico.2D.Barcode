@@ -48,17 +48,21 @@ export class QrCodeScannerComponent implements OnInit {
 
   ngOnInit() {
     this.checkIfMobile();
-    if(!this.isMobile){
-      const permissionGranted = localStorage.getItem('cameraPermissionGranted');
-      if (permissionGranted === 'true') {
-        this.initializeCamera(); // Inicia a câmera automaticamente se a permissão já foi concedida
+    if (!this.isMobile) {
+      if (typeof localStorage !== 'undefined') {
+        const permissionGranted = localStorage.getItem('cameraPermissionGranted');
+        if (permissionGranted === 'true') {
+          this.initializeCamera();
+        }
+      } else {
+        console.warn('Local storage não disponível');
       }
     }
   }
 
-  // TODO: Teste para aumentar velocidade de abertura da camera
+  // Teste para aumentar velocidade de abertura da camera
   initializeCamera(): void {
-    if(typeof navigator !== 'undefined'){
+    if (typeof navigator !== 'undefined') {
       navigator.mediaDevices.getUserMedia({video: true})
         .then((stream) => {
           this.onCamerasFound([stream.getVideoTracks()[0].getSettings() as MediaDeviceInfo]);
@@ -68,6 +72,8 @@ export class QrCodeScannerComponent implements OnInit {
           console.error('Erro ao inicializar a câmera:', err);
           this.hasPermission = false;
         });
+    } else {
+      console.warn('Navigator não disponível');
     }
   }
 
@@ -120,18 +126,22 @@ export class QrCodeScannerComponent implements OnInit {
   onHasPermission(has: boolean): void {
     this.hasPermission = has;
 
-    if(!this.isMobile) {
-      if (has) {
-        localStorage.setItem('cameraPermissionGranted', 'true'); // Armazena a permissão
-        this.initializeCamera(); // Inicia a câmera se a permissão foi dada agora
+    if (!this.isMobile) {
+      if (typeof localStorage !== 'undefined' && typeof navigator !== 'undefined') {
+        if (has) {
+          localStorage.setItem('cameraPermissionGranted', 'true'); // Armazena a permissão
+          this.initializeCamera(); // Inicia a câmera se a permissão foi dada agora
+        } else {
+          navigator.mediaDevices.getUserMedia({video: true})
+            .then((stream) => {
+              this.hasPermission = true;
+              localStorage.setItem('cameraPermissionGranted', 'true'); // Armazena a permissão
+              this.onCamerasFound([stream.getVideoTracks()[0].getSettings() as MediaDeviceInfo]);
+            })
+            .catch((error) => console.error("Erro ao obter permissão da câmera:", error));
+        }
       } else {
-        navigator.mediaDevices.getUserMedia({video: true})
-          .then((stream) => {
-            this.hasPermission = true;
-            localStorage.setItem('cameraPermissionGranted', 'true'); // Armazena a permissão
-            this.onCamerasFound([stream.getVideoTracks()[0].getSettings() as MediaDeviceInfo]);
-          })
-          .catch((error) => console.error("Erro ao obter permissão da câmera:", error));
+        console.warn('Local storage ou Navigator não disponível');
       }
     }
   }

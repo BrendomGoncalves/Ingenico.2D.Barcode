@@ -123,6 +123,9 @@ Mín 1921px, para telas muito grandes [OK]
 */
 
 @media (max-width: 480px) {
+  .scanner-overlay{
+    display: none;
+  }
   .main-container {
     flex-direction: column;
     padding: 30px 5px;
@@ -209,6 +212,9 @@ Mín 1921px, para telas muito grandes [OK]
 }
 
 @media (min-width: 481px) and (max-width: 768px) {
+  .scanner-overlay{
+    display: none;
+  }
   .main-container {
     flex-direction: column;
     padding: 30px 8px;
@@ -297,7 +303,7 @@ Mín 1921px, para telas muito grandes [OK]
 @media (min-width: 769px) and (max-width: 1024px) {
   .scanner-overlay {
     width: 100%;
-    min-height: 750px;
+    min-height: 710px;
 
     h1 {
       font-size: 2.6rem;

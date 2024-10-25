@@ -48,20 +48,27 @@ export class QrCodeScannerComponent implements OnInit {
 
   ngOnInit() {
     this.checkIfMobile();
-    // this.initializeCamera(); // TODO: Teste para aumentar velocidade de abertura da camera
+    if(!this.isMobile){
+      const permissionGranted = localStorage.getItem('cameraPermissionGranted');
+      if (permissionGranted === 'true') {
+        this.initializeCamera(); // Inicia a câmera automaticamente se a permissão já foi concedida
+      }
+    }
   }
 
   // TODO: Teste para aumentar velocidade de abertura da camera
   initializeCamera(): void {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then((stream) => {
-        this.onCamerasFound([stream.getVideoTracks()[0].getSettings() as MediaDeviceInfo]);
-        this.hasPermission = true;
-      })
-      .catch((err) => {
-        console.error('Erro ao inicializar a câmera:', err);
-        this.hasPermission = false;
-      });
+    if(typeof navigator !== 'undefined'){
+      navigator.mediaDevices.getUserMedia({video: true})
+        .then((stream) => {
+          this.onCamerasFound([stream.getVideoTracks()[0].getSettings() as MediaDeviceInfo]);
+          this.hasPermission = true;
+        })
+        .catch((err) => {
+          console.error('Erro ao inicializar a câmera:', err);
+          this.hasPermission = false;
+        });
+    }
   }
 
   // Verificação inicial para ativação do overlay
@@ -112,6 +119,21 @@ export class QrCodeScannerComponent implements OnInit {
 
   onHasPermission(has: boolean): void {
     this.hasPermission = has;
+
+    if(!this.isMobile) {
+      if (has) {
+        localStorage.setItem('cameraPermissionGranted', 'true'); // Armazena a permissão
+        this.initializeCamera(); // Inicia a câmera se a permissão foi dada agora
+      } else {
+        navigator.mediaDevices.getUserMedia({video: true})
+          .then((stream) => {
+            this.hasPermission = true;
+            localStorage.setItem('cameraPermissionGranted', 'true'); // Armazena a permissão
+            this.onCamerasFound([stream.getVideoTracks()[0].getSettings() as MediaDeviceInfo]);
+          })
+          .catch((error) => console.error("Erro ao obter permissão da câmera:", error));
+      }
+    }
   }
 
   onCodeResult(result: string) {
@@ -205,9 +227,6 @@ export class QrCodeScannerComponent implements OnInit {
   }
 
   clickOverlay() {
-    if(!this.isMobile){
-      this.initializeCamera();
-    }
     this.overlay = false;
     setTimeout(() => {
       this.overlay = true;

@@ -9,6 +9,7 @@ import {TagModule} from 'primeng/tag';
 import {Button, ButtonModule} from 'primeng/button';
 import {CarrosselSimilaresComponent} from '../../../Components/carrossel-similares/carrossel-similares.component';
 import {RippleModule} from 'primeng/ripple';
+import {ChipModule} from "primeng/chip";
 
 @Component({
   selector: 'app-produto-details',
@@ -21,7 +22,8 @@ import {RippleModule} from 'primeng/ripple';
     Button,
     CarrosselSimilaresComponent,
     ButtonModule,
-    RippleModule
+    RippleModule,
+    ChipModule
   ],
   templateUrl: './produto-details.component.html',
   styleUrl: './produto-details.component.scss',
